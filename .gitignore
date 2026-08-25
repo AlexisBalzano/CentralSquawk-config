@@ -1,0 +1,11 @@
+# The Navigraph DFD database is a BUILD INPUT, not config. It is ~160 MB, which
+# exceeds GitHub's 100 MB per-file limit, and it is Navigraph-licensed data that
+# should not be redistributed through a public repository.
+#
+# Drop the current AIRAC cycle's db.s3db here, run the generators in tools/, and
+# commit only their output.
+db.s3db
+*.s3db
+
+__pycache__/
+*.pyc
