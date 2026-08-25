@@ -21,6 +21,15 @@
     "tickIntervalSec": 15
   },
 
+  "_modeS": "ICAO region prefixes of the Mode S participating states, used to decide whether a flight's DESTINATION is in the area. Must match the PARTICIPATING list in tools/build_modes_area.py that produced modes_area.geojson.",
+  "modeS": {
+    "states": [
+      "EB", "ED", "EH", "EK", "EL", "EP", "ES", "EY", "EV",
+      "LB", "LD", "LE", "LF", "LH", "LI", "LJ", "LK", "LO",
+      "LR", "LS", "LU", "LZ"
+    ]
+  },
+
   "_exclusions": "Codes inside a CAL range that must never be issued. The conspicuity, default and emergency codes above are excluded automatically and do not need listing here.",
   "exclusions": []
 }
