@@ -15,6 +15,8 @@ database and has to be regenerated each AIRAC cycle (every 28 days).
 | `airway.txt` | every AIRAC | `AIRWAY <name>` blocks with their **complete** fix list |
 | `procedure.txt` | every AIRAC | `<airport> <SID\|STAR> <designator>` for in-area airports |
 | `modes_area.geojson` | rarely | The Mode S conspicuity area, as FIR/UIR rings |
+| `ssr_pool.json` | per CAL release | French ORCAM code ranges and their destinations |
+| `config.json` | by hand | Policy: AOR, code classes, timing, exclusions |
 | `tools/` | — | The generators |
 | `db.s3db` | — | Build input. **Gitignored** — see below |
 
@@ -100,6 +102,37 @@ change the area.
 After rebuilding, spot-check it before regenerating anything: open the file in
 <https://geojson.io> and confirm the coverage looks like the intended states.
 Then re-run `generate_navdata.py`, because every text file is derived from it.
+
+## Rebuilding the SSR pool
+
+`ssr_pool.json` is **not** part of the AIRAC cycle. Rebuild it when EUROCONTROL
+publishes a new Code Allocation List:
+
+```bash
+py tools/build_pool.py --cal path/to/eurocontrol-icao-eur-cal-vX-YY.xls
+```
+
+The CAL is a legacy `.xls` workbook; the generator needs `xlrd`, which reads
+exactly that format (`py -m pip install xlrd`).
+
+Three rules decide what survives, and they matter:
+
+- **Only ranges allocated exclusively to France.** Rows whose Unit column lists
+  several states (`EB ED EDYY EG EH EI LF LS`) are held jointly across the EUR-B
+  participating area. Issuing from those unilaterally is how you collide with
+  Belgium, so they are dropped — about half the rows mentioning LF.
+- **Civil only.** `CIV` and `CIV_MIL` are kept, pure `MIL` is dropped.
+- **Destinations are carried through.** ORCAM allocates by destination, so each
+  range keeps the ICAO prefixes it may be issued for. `ALL` becomes `"*"`.
+
+Check the summary it prints. It reports overlapping ranges (a code covered
+twice belongs to whichever range claims it first) and ranges destined to FIR
+identifiers rather than aerodrome prefixes, which can never match a flight and
+are therefore dead capacity.
+
+`config.json` is hand-maintained and is not regenerated. Its `exclusions` list
+is for codes inside a CAL range that must never be issued; the conspicuity,
+default and emergency codes are excluded automatically and need no entry.
 
 ## Notes
 
