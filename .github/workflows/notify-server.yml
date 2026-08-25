@@ -1,0 +1,79 @@
+name: Notify Central Squawk
+
+# Tells the API to re-ingest this repository after a push.
+#
+# The API verifies an x-hub-signature-256 HMAC over the exact request body, the
+# same scheme a native GitHub webhook uses, so the signature here is computed
+# over the bytes this job actually sends.
+#
+# Requires two repository secrets:
+#   CENTRALSQUAWK_API_URL         base URL of the API, e.g. https://centralsquawk.vatsim.fr
+#   CENTRALSQUAWK_WEBHOOK_SECRET  must equal the API's GH_SECRET
+
+on:
+  push:
+    branches:
+      - main
+    # Only the files the server actually reads. A change to tools/ or the README
+    # cannot alter what is served, so it should not trigger a reload.
+    paths:
+      - "config.json"
+      - "ssr_pool.json"
+      - "modes_area.geojson"
+      - "fix.txt"
+      - "airway.txt"
+      - "procedure.txt"
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sanity-check the files the server will parse
+        run: |
+          set -euo pipefail
+          for f in config.json ssr_pool.json modes_area.geojson fix.txt airway.txt procedure.txt; do
+            test -s "$f" || { echo "::error::$f is missing or empty"; exit 1; }
+          done
+          for f in config.json ssr_pool.json modes_area.geojson; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" \
+              || { echo "::error::$f is not valid JSON"; exit 1; }
+          done
+          # Catch the mistake that silently changes eligibility: navdata files
+          # regenerated against different AIRAC cycles.
+          cycles=$(head -1 fix.txt airway.txt procedure.txt | grep -o 'AIRAC [0-9]*' | sort -u | wc -l)
+          test "$cycles" -eq 1 || { echo "::error::navdata files disagree on AIRAC cycle"; exit 1; }
+          echo "config looks well formed"
+
+      - name: Trigger config reload
+        env:
+          API_URL: ${{ secrets.CENTRALSQUAWK_API_URL }}
+          SECRET: ${{ secrets.CENTRALSQUAWK_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${API_URL:-}" ] || [ -z "${SECRET:-}" ]; then
+            echo "::error::CENTRALSQUAWK_API_URL or CENTRALSQUAWK_WEBHOOK_SECRET is not set"
+            exit 1
+          fi
+
+          payload=$(jq -nc \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg ref  "$GITHUB_REF" \
+            --arg sha  "$GITHUB_SHA" \
+            --arg who  "$GITHUB_ACTOR" \
+            '{repository: $repo, ref: $ref, after: $sha, sender: {login: $who}}')
+
+          # printf, not echo: echo appends a newline, the HMAC would cover it,
+          # and the server would compute a different digest over what it received.
+          signature="sha256=$(printf '%s' "$payload" \
+            | openssl dgst -sha256 -hmac "$SECRET" \
+            | awk '{print $NF}')"
+
+          # --data-raw sends the bytes verbatim, so they match what was signed.
+          curl --fail-with-body -sS -X POST "${API_URL%/}/api/config-webhook" \
+            -H "content-type: application/json" \
+            -H "x-hub-signature-256: $signature" \
+            --data-raw "$payload"
+          echo
