@@ -1,0 +1,46 @@
+{
+  "_comment": "PLACEHOLDER CODE RANGES. The pools below are synthetic and exist only so the API runs. Replace every range and exclusion list with the real French ORCAM allocations before this reaches production, or aircraft will be issued codes that belong to somebody else.",
+  "version": 1,
+
+  "aor": {
+    "firs": ["LFBB", "LFEE", "LFFF", "LFMM", "LFRR"],
+    "entryRingNm": 40,
+    "zonePaddingNm": 100
+  },
+
+  "codes": {
+    "default": ["0000", "1200", "1234", "2000", "7000"],
+    "conspicuity": "1000",
+    "emergency": ["7500", "7600", "7700"],
+    "manuallyAssignable": ["7600", "7700"]
+  },
+
+  "timing": {
+    "gracePeriodSec": 300,
+    "groundSpeedThresholdKt": 50,
+    "tickIntervalSec": 15
+  },
+
+  "pools": {
+    "LFFF": {
+      "ranges": [["0301", "0377"], ["0401", "0477"]],
+      "exclusions": []
+    },
+    "LFBB": {
+      "ranges": [["0501", "0577"], ["0601", "0677"]],
+      "exclusions": []
+    },
+    "LFEE": {
+      "ranges": [["0701", "0777"], ["2001", "2077"]],
+      "exclusions": []
+    },
+    "LFMM": {
+      "ranges": [["2101", "2177"], ["2201", "2277"]],
+      "exclusions": []
+    },
+    "LFRR": {
+      "ranges": [["2301", "2377"], ["2401", "2477"]],
+      "exclusions": []
+    }
+  }
+}
