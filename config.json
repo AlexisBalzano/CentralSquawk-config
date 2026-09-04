@@ -12,7 +12,7 @@
     "default": ["0000", "1200", "1234", "2000", "7000"],
     "conspicuity": "1000",
     "emergency": ["7500", "7600", "7700"],
-    "manuallyAssignable": ["7600", "7700"]
+    "manuallyAssignable": ["7700"]
   },
 
   "timing": {

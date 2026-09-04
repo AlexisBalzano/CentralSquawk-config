@@ -4,9 +4,6 @@ Configuration and navdata for the CentralSquawk API. Pushing to `main` fires a
 webhook that makes the server re-ingest this repo, so **a push here changes what
 production is running**.
 
-Everything except the Mode S area polygon is derived from a Navigraph DFD
-database and has to be regenerated each AIRAC cycle (every 28 days).
-
 ## Contents
 
 | File | Regenerate | What it is |
