@@ -5,7 +5,9 @@
   "aor": {
     "firs": ["LFBB", "LFEE", "LFFF", "LFMM", "LFRR"],
     "entryRingNm": 40,
-    "zonePaddingNm": 100
+    "zonePaddingNm": 100,
+    "borderInsetNm": 5,
+    "borderMinAltitudeFt": 10000
   },
 
   "codes": {
